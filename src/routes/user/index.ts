@@ -16,4 +16,15 @@ userRouter.post(
   ControllerUser.create
 );
 
+userRouter.post(
+  "/auth",
+  new Validation().validation({
+    body: yup.object({
+      name: yup.string().required(),
+      password: yup.string().required(),
+    }),
+  }),
+  ControllerUser.auth
+);
+
 export default userRouter;

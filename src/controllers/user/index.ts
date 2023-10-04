@@ -5,6 +5,7 @@ import User from "../../models/user";
 class ControllerUser {
   constructor() {
     this.create = this.create.bind(this);
+    this.auth = this.auth.bind(this);
   }
 
   private hashPassword(password: string): string {
@@ -13,10 +14,18 @@ class ControllerUser {
   }
 
   public async create(req: Request, res: Response): Promise<Response> {
-    const body = req.body;
-    const password = this.hashPassword(body["password"]);
+    const { name, password } = req.body;
+    const hashPassword = this.hashPassword(password);
 
-    const id = (await User.create({ nickname: body["name"], password }))._id;
+    const getIsNameExist = await User.findOne({ nickname: name });
+    if (getIsNameExist) {
+      return res.status(400).json({
+        errors: "This name already exist in database",
+      });
+    }
+
+    const id = (await User.create({ nickname: name, password: hashPassword }))
+      ._id;
 
     return res.status(201).json({
       success: {
@@ -25,6 +34,25 @@ class ControllerUser {
           userId: id,
         },
       },
+    });
+  }
+
+  public async auth(req: Request, res: Response): Promise<Response> {
+    const { name, password } = req.body;
+    const hashPassword = this.hashPassword(password);
+
+    const user = await User.findOne({ nickname: name, password: hashPassword });
+
+    if (!user) {
+      return res.status(400).json({
+        errors: "User or password incorrect",
+      });
+    }
+
+    return res.status(200).json({
+      _id: user._id,
+      name: user.nickname,
+      password: user.password,
     });
   }
 }
