@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
 import User from "../../models/user";
 
 class ControllerUser {
@@ -11,6 +12,14 @@ class ControllerUser {
   private hashPassword(password: string): string {
     const hash = crypto.createHash("sha256").update(password).digest("hex");
     return hash;
+  }
+
+  private generateJwt<T>(payload: T, expiresIn: string): string {
+    const jwtUser = jwt.sign(payload!, process.env["SECRET_KEY_JWT"]!, {
+      expiresIn,
+    });
+
+    return jwtUser;
   }
 
   public async create(req: Request, res: Response): Promise<Response> {
@@ -49,10 +58,15 @@ class ControllerUser {
       });
     }
 
-    return res.status(200).json({
+    const payloadUser = {
       _id: user._id,
       name: user.nickname,
       password: user.password,
+    };
+    const jwtUser = this.generateJwt(payloadUser, "1d");
+
+    return res.status(200).json({
+      jwtAuth: jwtUser,
     });
   }
 }
