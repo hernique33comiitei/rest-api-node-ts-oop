@@ -7,7 +7,7 @@ dotenv.config();
 
 export class App {
   private express: express.Application;
-  private port = 9000;
+  private port = process.env["PORT"];
 
   constructor() {
     this.express = express();

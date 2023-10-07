@@ -1,13 +1,13 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import * as yup from "yup";
 
-type TMethodsValidation = "body" | "header" | "params" | "query";
+type TMethodsValidation = "body" | "headers" | "params" | "query";
 type TValidationAll = Partial<{
   [key in TMethodsValidation]: yup.Schema;
 }>;
 
 export class Validation {
-  public validation(objectSchema: TValidationAll): RequestHandler {
+  public static validation(objectSchema: TValidationAll): RequestHandler {
     return (req: Request, res: Response, next: NextFunction) => {
       const resultErros: Record<string, Record<string, string>> = {};
 

@@ -23,18 +23,23 @@ class ControllerUser {
   }
 
   public async create(req: Request, res: Response): Promise<Response> {
-    const { name, password } = req.body;
+    const { name, password, email } = req.body;
     const hashPassword = this.hashPassword(password);
 
-    const getIsNameExist = await User.findOne({ nickname: name });
-    if (getIsNameExist) {
+    const getIsEmailExist = await User.findOne({ email });
+    if (getIsEmailExist) {
       return res.status(400).json({
-        errors: "This name already exist in database",
+        errors: "This email already exist in database",
       });
     }
 
-    const id = (await User.create({ nickname: name, password: hashPassword }))
-      ._id;
+    const id = (
+      await User.create({
+        nickname: name,
+        password: hashPassword,
+        email: email,
+      })
+    )._id;
 
     return res.status(201).json({
       success: {
@@ -47,27 +52,38 @@ class ControllerUser {
   }
 
   public async auth(req: Request, res: Response): Promise<Response> {
-    const { name, password } = req.body;
+    const { name, password, email } = req.body;
     const hashPassword = this.hashPassword(password);
 
-    const user = await User.findOne({ nickname: name, password: hashPassword });
+    const user = await User.findOne({
+      nickname: name,
+      password: hashPassword,
+      email: email,
+    });
 
     if (!user) {
       return res.status(400).json({
-        errors: "User or password incorrect",
+        errors: "Email or password incorrect",
       });
     }
 
     const payloadUser = {
       _id: user._id,
+      email: email,
       name: user.nickname,
-      password: user.password,
     };
-    const jwtUser = this.generateJwt(payloadUser, "1d");
+    const jwtUser = this.generateJwt(payloadUser, "1h");
 
     return res.status(200).json({
       jwtAuth: jwtUser,
     });
+  }
+
+  public profile(req: Request, res: Response): Response {
+    const tokenSession = req.headers["x-access-token"] as string;
+    const dataUser = jwt.decode(tokenSession);
+
+    return res.status(200).json({ dataUser });
   }
 }
 
