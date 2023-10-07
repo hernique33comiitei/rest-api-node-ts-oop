@@ -3,10 +3,17 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import User from "../../models/user";
 
+type TUser = {
+  email: string;
+  name: string;
+  password: string;
+};
+
 class ControllerUser {
   constructor() {
     this.create = this.create.bind(this);
     this.auth = this.auth.bind(this);
+    this.updateProfile = this.updateProfile.bind(this);
   }
 
   private hashPassword(password: string): string {
@@ -84,6 +91,26 @@ class ControllerUser {
     const dataUser = jwt.decode(tokenSession);
 
     return res.status(200).json({ dataUser });
+  }
+
+  public async updateProfile(req: Request, res: Response): Promise<Response> {
+    const tokenSession = req.headers["x-access-token"] as string;
+    const { email } = jwt.decode(tokenSession) as TUser;
+    const { password, newPassword } = req.body;
+
+    const hashPassword = this.hashPassword(password);
+
+    const user = await User.findOne({ email: email, password: hashPassword });
+
+    if (!user) {
+      return res.status(401).json({ error: "password is invalid" });
+    }
+
+    await User.findByIdAndUpdate(user._id, {
+      $set: { password: this.hashPassword(newPassword) },
+    });
+
+    return res.status(200).json({ sucess: "password changed successfully" });
   }
 }
 

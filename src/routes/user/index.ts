@@ -41,4 +41,19 @@ userRouter.get(
   ControllerUser.profile
 );
 
+userRouter.put(
+  "/update-profile",
+  Validation.validation({
+    headers: yup.object({
+      "x-access-token": yup.string().required(),
+    }),
+    body: yup.object({
+      password: yup.string().required(),
+      newPassword: yup.string().required(),
+    }),
+  }),
+  Auth.auth(),
+  ControllerUser.updateProfile
+);
+
 export default userRouter;
