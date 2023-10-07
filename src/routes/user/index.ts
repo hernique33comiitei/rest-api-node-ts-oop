@@ -56,4 +56,18 @@ userRouter.put(
   ControllerUser.updateProfile
 );
 
+userRouter.delete(
+  "/delete-profile",
+  Validation.validation({
+    headers: yup.object({
+      "x-access-token": yup.string().required(),
+    }),
+    body: yup.object({
+      password: yup.string().required(),
+    }),
+  }),
+  Auth.auth(),
+  ControllerUser.deleteUser
+);
+
 export default userRouter;

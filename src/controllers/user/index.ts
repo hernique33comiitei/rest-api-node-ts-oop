@@ -2,18 +2,14 @@ import { Request, Response } from "express";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import User from "../../models/user";
-
-type TUser = {
-  email: string;
-  name: string;
-  password: string;
-};
+import { TUser } from "./type";
 
 class ControllerUser {
   constructor() {
     this.create = this.create.bind(this);
     this.auth = this.auth.bind(this);
     this.updateProfile = this.updateProfile.bind(this);
+    this.deleteUser = this.deleteUser.bind(this);
   }
 
   private hashPassword(password: string): string {
@@ -111,6 +107,23 @@ class ControllerUser {
     });
 
     return res.status(200).json({ sucess: "password changed successfully" });
+  }
+
+  public async deleteUser(req: Request, res: Response): Promise<Response> {
+    const email = (jwt.decode(req.headers["x-access-token"] as string) as TUser)
+      .email;
+    const hashPassword = this.hashPassword(req.body["password"]);
+
+    const user = await User.findOne({ email: email, password: hashPassword });
+    console.log(email, hashPassword);
+
+    if (!user) {
+      return res.status(401).json({ error: "password is invalid" });
+    }
+
+    await User.deleteOne({ email });
+
+    return res.status(200).json({ sucess: "user deleted" });
   }
 }
 
